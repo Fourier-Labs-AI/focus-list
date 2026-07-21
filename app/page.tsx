@@ -68,6 +68,18 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+async function apiRequest(input: RequestInfo | URL, init?: RequestInit) {
+  const response = await fetch(input, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...init?.headers },
+  });
+  if (!response.ok) {
+    const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(payload?.error || "Could not save your change");
+  }
+  return response;
+}
+
 function TodoCard({
   todo,
   onToggle,
@@ -158,8 +170,9 @@ function TodoCard({
 }
 
 export default function Home() {
-  const [todos, setTodos] = useState<Todo[]>(starterTodos);
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [ready, setReady] = useState(false);
+  const [error, setError] = useState("");
   const [view, setView] = useState<"all" | Status>("all");
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -168,18 +181,41 @@ export default function Home() {
   const [priority, setPriority] = useState<Priority>("Medium");
 
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved) setTodos(JSON.parse(saved) as Todo[]);
-    } catch {
-      // Keep the starter list if local storage is unavailable or malformed.
-    }
-    setReady(true);
-  }, []);
+    async function loadTodos() {
+      let localTodos: Todo[] | null = null;
+      try {
+        const saved = window.localStorage.getItem(STORAGE_KEY);
+        if (saved) localTodos = JSON.parse(saved) as Todo[];
+      } catch {
+        // Ignore malformed legacy browser data.
+      }
 
-  useEffect(() => {
-    if (ready) window.localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
-  }, [ready, todos]);
+      try {
+        const response = await apiRequest("/api/todos");
+        const payload = (await response.json()) as { todos: Todo[] };
+
+        if (payload.todos.length) {
+          setTodos(payload.todos);
+        } else {
+          const todosToMigrate = localTodos ?? starterTodos;
+          await Promise.all(
+            todosToMigrate.map((todo) =>
+              apiRequest("/api/todos", { method: "POST", body: JSON.stringify(todo) }),
+            ),
+          );
+          setTodos(todosToMigrate);
+        }
+        window.localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        setTodos(localTodos ?? starterTodos);
+        setError("Your saved list is temporarily unavailable. Changes may not persist until you reconnect.");
+      } finally {
+        setReady(true);
+      }
+    }
+
+    void loadTodos();
+  }, []);
 
   const counts = useMemo(
     () => ({
@@ -199,60 +235,97 @@ export default function Home() {
     });
   }, [search, todos, view]);
 
-  function addTodo(event: FormEvent) {
+  async function addTodo(event: FormEvent) {
     event.preventDefault();
     if (!title.trim()) return;
-    setTodos((current) => [
-      {
-        id: crypto.randomUUID(),
-        title: title.trim(),
-        description: description.trim(),
-        priority,
-        status: "todo",
-        createdAt: new Date().toISOString(),
-        comments: [],
-      },
-      ...current,
-    ]);
+    const todo: Todo = {
+      id: crypto.randomUUID(),
+      title: title.trim(),
+      description: description.trim(),
+      priority,
+      status: "todo",
+      createdAt: new Date().toISOString(),
+      comments: [],
+    };
+    setError("");
+    setTodos((current) => [todo, ...current]);
     setTitle("");
     setDescription("");
     setPriority("Medium");
     setShowForm(false);
     setView("todo");
+    try {
+      await apiRequest("/api/todos", { method: "POST", body: JSON.stringify(todo) });
+    } catch {
+      setTodos((current) => current.filter((item) => item.id !== todo.id));
+      setError("That todo could not be saved. Please try again.");
+    }
   }
 
-  function toggleTodo(id: string) {
+  async function toggleTodo(id: string) {
+    const previous = todos;
+    const currentTodo = todos.find((todo) => todo.id === id);
+    if (!currentTodo) return;
+    const nextStatus: Status = currentTodo.status === "done" ? "todo" : "done";
+    setError("");
     setTodos((current) =>
       current.map((todo) =>
         todo.id === id
           ? {
               ...todo,
-              status: todo.status === "done" ? "todo" : "done",
-              completedAt: todo.status === "done" ? undefined : new Date().toISOString(),
+              status: nextStatus,
+              completedAt: nextStatus === "done" ? new Date().toISOString() : undefined,
             }
           : todo,
       ),
     );
+    try {
+      const response = await apiRequest("/api/todos", {
+        method: "PATCH",
+        body: JSON.stringify({ id, status: nextStatus }),
+      });
+      const payload = (await response.json()) as { completedAt?: string };
+      setTodos((current) => current.map((todo) => todo.id === id ? { ...todo, completedAt: payload.completedAt } : todo));
+    } catch {
+      setTodos(previous);
+      setError("That status change could not be saved. Please try again.");
+    }
   }
 
-  function addComment(id: string, text: string) {
+  async function addComment(id: string, text: string) {
+    const comment = { id: crypto.randomUUID(), text, createdAt: new Date().toISOString() };
+    setError("");
     setTodos((current) =>
       current.map((todo) =>
         todo.id === id
           ? {
               ...todo,
-              comments: [
-                ...todo.comments,
-                { id: crypto.randomUUID(), text, createdAt: new Date().toISOString() },
-              ],
+              comments: [...todo.comments, comment],
             }
           : todo,
       ),
     );
+    try {
+      await apiRequest("/api/todos", {
+        method: "POST",
+        body: JSON.stringify({ action: "comment", todoId: id, ...comment }),
+      });
+    } catch {
+      setTodos((current) => current.map((todo) => todo.id === id ? { ...todo, comments: todo.comments.filter((item) => item.id !== comment.id) } : todo));
+      setError("That clarification could not be saved. Please try again.");
+    }
   }
 
-  function deleteTodo(id: string) {
+  async function deleteTodo(id: string) {
+    const previous = todos;
+    setError("");
     setTodos((current) => current.filter((todo) => todo.id !== id));
+    try {
+      await apiRequest(`/api/todos?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    } catch {
+      setTodos(previous);
+      setError("That todo could not be deleted. Please try again.");
+    }
   }
 
   return (
@@ -262,10 +335,11 @@ export default function Home() {
           <div className="brand-mark" aria-hidden="true"><span /></div>
           <span>Focus List</span>
         </div>
-        <div className="today-label">Your personal workspace</div>
+        <div className="today-label"><span className={`sync-dot ${ready && !error ? "is-synced" : ""}`} />{ready ? (error ? "Connection issue" : "Saved securely") : "Loading your list"}</div>
       </header>
 
       <section className="workspace">
+        {error && <div className="error-banner" role="status">{error}</div>}
         <div className="hero-row">
           <div>
             <p className="eyebrow">Today&apos;s focus</p>

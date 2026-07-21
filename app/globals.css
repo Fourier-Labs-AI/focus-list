@@ -56,9 +56,12 @@ button:disabled { cursor: not-allowed; opacity: .5; }
 .brand { display: flex; align-items: center; gap: 12px; font-weight: 720; letter-spacing: -.02em; }
 .brand-mark { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 9px; background: var(--green); transform: rotate(-3deg); }
 .brand-mark span { width: 12px; height: 7px; border-left: 2px solid #fff; border-bottom: 2px solid #fff; transform: rotate(-45deg) translate(1px, -1px); }
-.today-label { color: var(--muted); font-size: 13px; }
+.today-label { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; }
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #c59148; box-shadow: 0 0 0 3px rgba(197, 145, 72, .12); }
+.sync-dot.is-synced { background: #4f8662; box-shadow: 0 0 0 3px rgba(79, 134, 98, .12); }
 
 .workspace { width: min(1040px, calc(100% - 40px)); margin: 0 auto; padding: 74px 0 100px; }
+.error-banner { margin: -30px 0 36px; padding: 12px 15px; border: 1px solid #e5c4bd; border-radius: 11px; color: #8b4539; background: #fbebe7; font-size: 13px; }
 .hero-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 32px; margin-bottom: 48px; }
 .eyebrow { margin: 0 0 10px; color: var(--green); text-transform: uppercase; font: 650 11px/1 var(--font-geist-mono), monospace; letter-spacing: .13em; }
 h1 { margin: 0; max-width: 700px; font-size: clamp(42px, 6vw, 72px); line-height: .97; letter-spacing: -.065em; font-weight: 660; }

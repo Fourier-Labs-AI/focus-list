@@ -8,8 +8,8 @@ function toRouteErrorMessage(error: unknown) {
     error instanceof Error && error.cause instanceof Error ? error.cause.message : "";
   const combined = `${message}\n${detail}`;
 
-  if (combined.includes("no such table") || combined.includes('from "notes"')) {
-    return "The notes table is unavailable. Generate the migration locally with `npm run db:generate`, then deploy so the platform can apply the generated SQL to the real D1 database.";
+  if (combined.includes("does not exist") || combined.includes('from "notes"')) {
+    return "The notes table is unavailable. Deploy the application so Harbour can apply the bundled Aurora PostgreSQL migration.";
   }
 
   return message;
@@ -47,7 +47,10 @@ export async function POST(request: Request) {
     }
 
     const db = getDb();
-    const [note] = await db.insert(notes).values({ title, content }).returning();
+    const [note] = await db
+      .insert(notes)
+      .values({ id: crypto.randomUUID(), title, content })
+      .returning();
     return Response.json({ note }, { status: 201 });
   } catch (error) {
     return Response.json(

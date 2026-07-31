@@ -1,0 +1,58 @@
+{
+  "sequences": [],
+  "tables": [
+    {
+      "columns": [
+        { "default": null, "name": "id", "nullable": false, "type": "text" },
+        { "default": null, "name": "todo_id", "nullable": false, "type": "text" },
+        { "default": null, "name": "text", "nullable": false, "type": "text" },
+        { "default": null, "name": "created_at", "nullable": false, "type": "timestamp with time zone" }
+      ],
+      "constraints": [
+        { "definition": "PRIMARY KEY (id)", "name": "comments_pkey", "type": "p" },
+        { "definition": "FOREIGN KEY (todo_id) REFERENCES todos(id) ON DELETE CASCADE", "name": "comments_todo_id_fkey", "type": "f" }
+      ],
+      "indexes": [
+        { "definition": "CREATE UNIQUE INDEX comments_pkey ON public.comments USING btree (id)", "name": "comments_pkey" }
+      ],
+      "name": "comments",
+      "schema": "public"
+    },
+    {
+      "columns": [
+        { "default": null, "name": "id", "nullable": false, "type": "text" },
+        { "default": null, "name": "title", "nullable": false, "type": "text" },
+        { "default": "''::text", "name": "content", "nullable": false, "type": "text" },
+        { "default": "CURRENT_TIMESTAMP", "name": "created_at", "nullable": false, "type": "timestamp with time zone" }
+      ],
+      "constraints": [
+        { "definition": "PRIMARY KEY (id)", "name": "notes_pkey", "type": "p" }
+      ],
+      "indexes": [
+        { "definition": "CREATE UNIQUE INDEX notes_pkey ON public.notes USING btree (id)", "name": "notes_pkey" }
+      ],
+      "name": "notes",
+      "schema": "public"
+    },
+    {
+      "columns": [
+        { "default": null, "name": "id", "nullable": false, "type": "text" },
+        { "default": null, "name": "title", "nullable": false, "type": "text" },
+        { "default": "''::text", "name": "description", "nullable": false, "type": "text" },
+        { "default": null, "name": "priority", "nullable": false, "type": "text" },
+        { "default": "'todo'::text", "name": "status", "nullable": false, "type": "text" },
+        { "default": null, "name": "created_at", "nullable": false, "type": "timestamp with time zone" },
+        { "default": null, "name": "completed_at", "nullable": true, "type": "timestamp with time zone" }
+      ],
+      "constraints": [
+        { "definition": "PRIMARY KEY (id)", "name": "todos_pkey", "type": "p" }
+      ],
+      "indexes": [
+        { "definition": "CREATE UNIQUE INDEX todos_pkey ON public.todos USING btree (id)", "name": "todos_pkey" }
+      ],
+      "name": "todos",
+      "schema": "public"
+    }
+  ],
+  "version": 1
+}

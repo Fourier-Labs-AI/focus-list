@@ -1,20 +1,28 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { foreignKey, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
-export const todos = sqliteTable("todos", {
+export const todos = pgTable("todos", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull().default(""),
   priority: text("priority", { enum: ["High", "Medium", "Low"] }).notNull(),
   status: text("status", { enum: ["todo", "done"] }).notNull().default("todo"),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-  completedAt: integer("completed_at", { mode: "timestamp_ms" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
 });
 
-export const comments = sqliteTable("comments", {
-  id: text("id").primaryKey(),
-  todoId: text("todo_id")
-    .notNull()
-    .references(() => todos.id, { onDelete: "cascade" }),
-  text: text("text").notNull(),
-  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
-});
+export const comments = pgTable(
+  "comments",
+  {
+    id: text("id").primaryKey(),
+    todoId: text("todo_id").notNull(),
+    text: text("text").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    foreignKey({
+      columns: [table.todoId],
+      foreignColumns: [todos.id],
+      name: "comments_todo_id_fkey",
+    }).onDelete("cascade"),
+  ],
+);

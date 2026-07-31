@@ -3,7 +3,7 @@
 An internal todo workspace for capturing tasks, adding clarification and comments,
 setting priorities, and moving completed work to done.
 
-Todos and comments are persisted in the site's private Cloudflare D1 database.
+Todos and comments are persisted in Aurora PostgreSQL.
 
 ## Features
 
@@ -15,7 +15,8 @@ Todos and comments are persisted in the site's private Cloudflare D1 database.
 
 ## Local development
 
-Requires Node.js `>=22.13.0`.
+Requires Node.js `>=22.13.0` and a PostgreSQL connection string in
+`DATABASE_URL`.
 
 ```bash
 npm install
@@ -32,6 +33,6 @@ npm run lint
 
 ## Storage
 
-The database schema is defined in `db/schema.ts` with Drizzle ORM. The deployed
-site receives its private D1 binding as `DB`, configured by
-`.openai/hosting.json`.
+The PostgreSQL schema is defined with Drizzle ORM in `db/schema.ts` and
+`examples/d1/db/schema.ts`. Harbour applies the ordered SQL bundle in
+`.harbour/aurora` during deployment.

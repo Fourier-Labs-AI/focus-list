@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import { browserRequest } from "./browser-request";
 
 type Status = "todo" | "done";
 type Priority = "High" | "Medium" | "Low";
@@ -69,7 +70,7 @@ function formatDate(value: string) {
 }
 
 async function apiRequest(input: RequestInfo | URL, init?: RequestInit) {
-  const response = await fetch(input, {
+  const response = await browserRequest(input, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
   });

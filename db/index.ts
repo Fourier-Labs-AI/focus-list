@@ -1,13 +1,22 @@
-import { env } from "cloudflare:workers";
-import { drizzle } from "drizzle-orm/d1";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "./schema";
 
+let connection: ReturnType<typeof postgres> | undefined;
+let databaseUrl: string | undefined;
+
 export function getDb() {
-  if (!env.DB) {
-    throw new Error(
-      "Cloudflare D1 binding `DB` is unavailable. Set the `d1` field in .openai/hosting.json to `DB` or let your control plane inject the real binding values before using the database."
-    );
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    throw new Error("DATABASE_URL is required to connect to Aurora PostgreSQL.");
   }
 
-  return drizzle(env.DB, { schema });
+  // Read the URL when a request asks for the database, rather than while the
+  // server bundle is being built. Reuse the client only within a warm runtime.
+  if (!connection || databaseUrl !== url) {
+    connection = postgres(url, { prepare: false });
+    databaseUrl = url;
+  }
+
+  return drizzle(connection, { schema });
 }

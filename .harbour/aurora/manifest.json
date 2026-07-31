@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "engine": "postgresql",
+  "migrations": [
+    {
+      "path": "0000_initial_schema.sql",
+      "sha256": "03f1cdf5f9b3d5133c25b2d68366b57d32e0a0e2dbec9dff6996d4cd46a93096"
+    }
+  ]
+}

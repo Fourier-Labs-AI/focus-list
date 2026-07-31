@@ -1,10 +1,10 @@
 {
   "version": "7",
-  "dialect": "sqlite",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "6",
+      "version": "7",
       "when": 1784603084812,
       "tag": "0000_volatile_sister_grimm",
       "breakpoints": true

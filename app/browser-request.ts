@@ -10,49 +10,60 @@ function applicationBasePath() {
     if (marker >= 0) return pathname.slice(0, marker);
   }
 
-  return window.location.pathname === "/"
-    ? ""
-    : window.location.pathname.replace(/\/$/, "");
+  return "";
+}
+
+function routedUrl(url: URL) {
+  const basePath = applicationBasePath();
+  if (
+    !basePath ||
+    url.origin !== window.location.origin ||
+    url.pathname === basePath ||
+    url.pathname.startsWith(`${basePath}/`)
+  ) {
+    return url;
+  }
+
+  url.pathname = `${basePath}${url.pathname}`;
+  return url;
 }
 
 function routedInput(input: RequestInfo | URL): RequestInfo | URL {
-  if (typeof input !== "string" || !input.startsWith("/") || input.startsWith("//")) {
-    return input;
+  if (typeof input === "string") {
+    if (!input.startsWith("/") || input.startsWith("//")) return input;
+    return routedUrl(new URL(input, window.location.origin));
   }
-  return `${applicationBasePath()}${input}`;
+
+  if (input instanceof URL) {
+    return routedUrl(new URL(input.href));
+  }
+
+  const url = routedUrl(new URL(input.url));
+  return url.href === input.url ? input : new Request(url, input);
 }
 
-async function sha256Hex(body: BodyInit) {
-  let bytes: ArrayBuffer;
-  if (typeof body === "string") {
-    bytes = new TextEncoder().encode(body).buffer;
-  } else if (body instanceof URLSearchParams) {
-    bytes = new TextEncoder().encode(body.toString()).buffer;
-  } else if (body instanceof Blob) {
-    bytes = await body.arrayBuffer();
-  } else if (body instanceof ArrayBuffer) {
-    bytes = body;
-  } else if (ArrayBuffer.isView(body)) {
-    bytes = new Uint8Array(body.buffer, body.byteOffset, body.byteLength).slice().buffer;
-  } else {
-    throw new Error("Unsupported browser request body for signed write request");
-  }
-
+async function sha256Hex(bytes: ArrayBuffer) {
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 export async function browserRequest(input: RequestInfo | URL, init: RequestInit = {}) {
-  const method = (init.method ?? (input instanceof Request ? input.method : "GET")).toUpperCase();
-  const headers = new Headers(init.headers);
+  const routed = routedInput(input);
+  const requestInput =
+    typeof routed === "string" && routed.startsWith("/")
+      ? new URL(routed, window.location.origin)
+      : routed;
+  const request = new Request(requestInput, init);
 
-  if (WRITE_METHODS.has(method)) {
-    if (init.body == null) {
-      headers.set("x-amz-content-sha256", await sha256Hex(""));
-    } else {
-      headers.set("x-amz-content-sha256", await sha256Hex(init.body));
-    }
+  if (!WRITE_METHODS.has(request.method.toUpperCase())) {
+    return fetch(request);
   }
 
-  return fetch(routedInput(input), { ...init, headers });
+  // Materialize the browser-generated representation (including FormData and
+  // Request bodies), hash those exact bytes, and leave the original body intact.
+  const body = await request.clone().arrayBuffer();
+  const headers = new Headers(request.headers);
+  headers.set("x-amz-content-sha256", await sha256Hex(body));
+
+  return fetch(new Request(request, { headers }));
 }

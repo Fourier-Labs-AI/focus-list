@@ -2,6 +2,9 @@ import { asc, desc, eq } from "drizzle-orm";
 import { getDb } from "../../../db";
 import { comments, todos } from "../../../db/schema";
 
+// The PostgreSQL client needs an ordinary TCP-capable Node.js server runtime.
+export const runtime = "nodejs";
+
 type Priority = "High" | "Medium" | "Low";
 type Status = "todo" | "done";
 

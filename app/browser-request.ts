@@ -1,16 +1,13 @@
 const WRITE_METHODS = new Set(["POST", "PUT", "PATCH"]);
 
 function applicationBasePath() {
-  if (typeof document === "undefined") return "";
+  if (typeof window === "undefined") return "";
 
-  const script = document.querySelector<HTMLScriptElement>('script[src*="/_next/"]');
-  if (script?.src) {
-    const pathname = new URL(script.src, window.location.href).pathname;
-    const marker = pathname.indexOf("/_next/");
-    if (marker >= 0) return pathname.slice(0, marker);
-  }
-
-  return "";
+  // Harbour serves deployed applications below /p/{route-key}. Derive that
+  // prefix from the document URL instead of relying on a framework asset path
+  // or exposing the server-only HARBOUR_BASE_PATH variable to browser code.
+  const match = window.location.pathname.match(/^\/p\/[^/]+(?=\/|$)/);
+  return match?.[0] ?? "";
 }
 
 function routedUrl(url: URL) {

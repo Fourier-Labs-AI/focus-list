@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build && node scripts/prepare-harbour.mjs",
-    "start": "next start -H 0.0.0.0 -p 8080",
+    "start": "node .next/standalone/server.js",
     "test": "npm run build && node --test tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"

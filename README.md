@@ -3,7 +3,7 @@
 An internal todo workspace for capturing tasks, adding clarification and comments,
 setting priorities, and moving completed work to done.
 
-Todos and comments are persisted in the site's private Cloudflare D1 database.
+Todos and comments are persisted in the site's private Aurora PostgreSQL database.
 
 ## Features
 
@@ -33,5 +33,5 @@ npm run lint
 ## Storage
 
 The database schema is defined in `db/schema.ts` with Drizzle ORM. The deployed
-site receives its private D1 binding as `DB`, configured by
-`.openai/hosting.json`.
+site reads its private Aurora connection string from the server-only
+`DATABASE_URL` environment variable.

@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "tables": [
+    {
+      "schema": "public",
+      "name": "comments",
+      "columns": [
+        {"name":"id","type":"text","nullable":false,"default":null},
+        {"name":"todo_id","type":"text","nullable":false,"default":null},
+        {"name":"text","type":"text","nullable":false,"default":null},
+        {"name":"created_at","type":"timestamp with time zone","nullable":false,"default":null}
+      ],
+      "constraints": [
+        {"name":"comments_pkey","type":"p","definition":"PRIMARY KEY (id)"},
+        {"name":"comments_todo_id_fkey","type":"f","definition":"FOREIGN KEY (todo_id) REFERENCES public.todos(id) ON DELETE CASCADE"}
+      ],
+      "indexes": [
+        {"name":"comments_pkey","definition":"CREATE UNIQUE INDEX comments_pkey ON public.comments USING btree (id)"}
+      ]
+    },
+    {
+      "schema": "public",
+      "name": "todos",
+      "columns": [
+        {"name":"id","type":"text","nullable":false,"default":null},
+        {"name":"title","type":"text","nullable":false,"default":null},
+        {"name":"description","type":"text","nullable":false,"default":"''::text"},
+        {"name":"priority","type":"text","nullable":false,"default":null},
+        {"name":"status","type":"text","nullable":false,"default":"'todo'::text"},
+        {"name":"created_at","type":"timestamp with time zone","nullable":false,"default":null},
+        {"name":"completed_at","type":"timestamp with time zone","nullable":true,"default":null}
+      ],
+      "constraints": [
+        {"name":"todos_pkey","type":"p","definition":"PRIMARY KEY (id)"}
+      ],
+      "indexes": [
+        {"name":"todos_pkey","definition":"CREATE UNIQUE INDEX todos_pkey ON public.todos USING btree (id)"}
+      ]
+    }
+  ],
+  "sequences": []
+}

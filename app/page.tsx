@@ -68,8 +68,16 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
+function tenantBasePath() {
+  const match = window.location.pathname.match(/^\/p\/[^/]+/);
+  return match?.[0] ?? "";
+}
+
 async function apiRequest(input: RequestInfo | URL, init?: RequestInit) {
-  const response = await fetch(input, {
+  const requestInput = typeof input === "string" && input.startsWith("/")
+    ? `${tenantBasePath()}${input}`
+    : input;
+  const response = await fetch(requestInput, {
     ...init,
     headers: { "Content-Type": "application/json", ...init?.headers },
   });

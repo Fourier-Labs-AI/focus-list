@@ -1,4 +1,4 @@
-import { cp, access } from "node:fs/promises";
+import { access, cp, mkdir } from "node:fs/promises";
 
 async function ensure(path) {
   try {
@@ -10,5 +10,6 @@ async function ensure(path) {
 
 await ensure(".next/standalone");
 await ensure(".next/static");
+await mkdir(".next/standalone/.next", { recursive: true });
 await cp(".next/static", ".next/standalone/.next/static", { recursive: true, force: true });
 await cp("public", ".next/standalone/public", { recursive: true, force: true });

@@ -1,42 +1,115 @@
 {
-  "version": 1,
+  "sequences": [],
   "tables": [
     {
-      "schema": "public",
-      "name": "comments",
       "columns": [
-        {"name":"id","type":"text","nullable":false,"default":null},
-        {"name":"todo_id","type":"text","nullable":false,"default":null},
-        {"name":"text","type":"text","nullable":false,"default":null},
-        {"name":"created_at","type":"timestamp with time zone","nullable":false,"default":null}
+        {
+          "default": null,
+          "name": "id",
+          "nullable": false,
+          "type": "text"
+        },
+        {
+          "default": null,
+          "name": "todo_id",
+          "nullable": false,
+          "type": "text"
+        },
+        {
+          "default": null,
+          "name": "text",
+          "nullable": false,
+          "type": "text"
+        },
+        {
+          "default": null,
+          "name": "created_at",
+          "nullable": false,
+          "type": "timestamp with time zone"
+        }
       ],
       "constraints": [
-        {"name":"comments_pkey","type":"p","definition":"PRIMARY KEY (id)"},
-        {"name":"comments_todo_id_fkey","type":"f","definition":"FOREIGN KEY (todo_id) REFERENCES public.todos(id) ON DELETE CASCADE"}
+        {
+          "definition": "PRIMARY KEY (id)",
+          "name": "comments_pkey",
+          "type": "p"
+        },
+        {
+          "definition": "FOREIGN KEY (todo_id) REFERENCES todos(id) ON DELETE CASCADE",
+          "name": "comments_todo_id_fkey",
+          "type": "f"
+        }
       ],
       "indexes": [
-        {"name":"comments_pkey","definition":"CREATE UNIQUE INDEX comments_pkey ON public.comments USING btree (id)"}
-      ]
+        {
+          "definition": "CREATE UNIQUE INDEX comments_pkey ON public.comments USING btree (id)",
+          "name": "comments_pkey"
+        }
+      ],
+      "name": "comments",
+      "schema": "public"
     },
     {
-      "schema": "public",
-      "name": "todos",
       "columns": [
-        {"name":"id","type":"text","nullable":false,"default":null},
-        {"name":"title","type":"text","nullable":false,"default":null},
-        {"name":"description","type":"text","nullable":false,"default":"''::text"},
-        {"name":"priority","type":"text","nullable":false,"default":null},
-        {"name":"status","type":"text","nullable":false,"default":"'todo'::text"},
-        {"name":"created_at","type":"timestamp with time zone","nullable":false,"default":null},
-        {"name":"completed_at","type":"timestamp with time zone","nullable":true,"default":null}
+        {
+          "default": null,
+          "name": "id",
+          "nullable": false,
+          "type": "text"
+        },
+        {
+          "default": null,
+          "name": "title",
+          "nullable": false,
+          "type": "text"
+        },
+        {
+          "default": "''::text",
+          "name": "description",
+          "nullable": false,
+          "type": "text"
+        },
+        {
+          "default": null,
+          "name": "priority",
+          "nullable": false,
+          "type": "text"
+        },
+        {
+          "default": "'todo'::text",
+          "name": "status",
+          "nullable": false,
+          "type": "text"
+        },
+        {
+          "default": null,
+          "name": "created_at",
+          "nullable": false,
+          "type": "timestamp with time zone"
+        },
+        {
+          "default": null,
+          "name": "completed_at",
+          "nullable": true,
+          "type": "timestamp with time zone"
+        }
       ],
       "constraints": [
-        {"name":"todos_pkey","type":"p","definition":"PRIMARY KEY (id)"}
+        {
+          "definition": "PRIMARY KEY (id)",
+          "name": "todos_pkey",
+          "type": "p"
+        }
       ],
       "indexes": [
-        {"name":"todos_pkey","definition":"CREATE UNIQUE INDEX todos_pkey ON public.todos USING btree (id)"}
-      ]
+        {
+          "definition": "CREATE UNIQUE INDEX todos_pkey ON public.todos USING btree (id)",
+          "name": "todos_pkey"
+        }
+      ],
+      "name": "todos",
+      "schema": "public"
     }
   ],
-  "sequences": []
+  "version": 1
 }

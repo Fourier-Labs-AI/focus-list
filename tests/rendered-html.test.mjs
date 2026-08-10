@@ -33,9 +33,14 @@ test("build produces the native Next server and public asset trees", async () =>
     access(new URL("../.next/standalone/public", import.meta.url)),
   ]);
 
-  const packageJson = JSON.parse(await source("package.json"));
+  const [packageJson, standaloneServer] = await Promise.all([
+    source("package.json").then(JSON.parse),
+    source(".next/standalone/server.js"),
+  ]);
   assert.equal(packageJson.scripts.start, "node .next/standalone/server.js");
   assert.match(packageJson.scripts.build, /^next build && node scripts\/prepare-harbour\.mjs$/);
+  assert.match(standaloneServer, /parseInt\(process\.env\.PORT,\s*10\)\s*\|\|\s*8080/);
+  assert.doesNotMatch(standaloneServer, /parseInt\(process\.env\.PORT,\s*10\)\s*\|\|\s*3000/);
 });
 
 test("post-build preparation rewrites the base-path marker in both deployable trees", async () => {
@@ -63,7 +68,9 @@ test("database access is request-runtime PostgreSQL and browser writes use the H
   ]);
 
   assert.match(database, /process\.env\.DATABASE_URL/);
-  assert.match(database, /postgres\(databaseUrl/);
+  assert.match(database, /postgres\(withoutTlsOptions\(databaseUrl\)/);
+  assert.match(database, /url\.searchParams\.delete\(option\)/);
+  assert.match(database, /max:\s*5/);
   assert.match(database, /drizzle\(getClient\(\)/);
   assert.match(schema, /from ["']drizzle-orm\/pg-core["']/);
   assert.match(apiRoute, /getDb\(\)/);

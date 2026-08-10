@@ -27,8 +27,27 @@ async function replaceMarker(root) {
   }
 }
 
+async function setProductionServerDefaults() {
+  const serverPath = ".next/standalone/server.js";
+  const source = await readFile(serverPath, "utf8");
+  const portPattern = /parseInt\(process\.env\.PORT,\s*10\)\s*\|\|\s*3000/;
+  if (!portPattern.test(source)) {
+    throw new Error("Expected Next standalone PORT default was not found");
+  }
+  const updated = source.replace(
+    portPattern,
+    "parseInt(process.env.PORT, 10) || 8080",
+  );
+  const hostnamePattern = /process\.env\.HOSTNAME\s*\|\|\s*["']0\.0\.0\.0["']/;
+  if (!hostnamePattern.test(updated)) {
+    throw new Error("Next standalone server does not default HOSTNAME to 0.0.0.0");
+  }
+  await writeFile(serverPath, updated);
+}
+
 await ensure(".next/standalone");
 await ensure(".next/static");
+await setProductionServerDefaults();
 await rm(".next/standalone/.next/static", { recursive: true, force: true });
 await cp("public", ".next/standalone/public", { recursive: true, force: true });
 await replaceMarker(".next/standalone");

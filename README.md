@@ -35,3 +35,5 @@ npm run lint
 The database schema is defined in `db/schema.ts` with Drizzle ORM. The deployed
 site reads its private Aurora connection string from the server-only
 `DATABASE_URL` environment variable.
+
+<!-- rebuilt 2026-08-13: proxyless database path (direct Aurora, RDS CA bundle) -->

@@ -16,6 +16,17 @@ const SIGN_IN_PATH = "/signin-with-chatgpt";
 const SIGN_OUT_PATH = "/signout-with-chatgpt";
 const CALLBACK_PATH = "/callback";
 
+function harbourBasePath(): string {
+  const value = process.env.HARBOUR_BASE_PATH ?? "";
+  return value === "/" ? "" : value.replace(/\/$/, "");
+}
+
+function withHarbourBasePath(path: string): string {
+  const basePath = harbourBasePath();
+  if (!basePath || path === basePath || path.startsWith(`${basePath}/`)) return path;
+  return `${basePath}${path}`;
+}
+
 export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
   const requestHeaders = await headers();
   const email = requestHeaders.get(USER_EMAIL_HEADER);
@@ -45,13 +56,13 @@ export async function requireChatGPTUser(
 }
 
 export function chatGPTSignInPath(returnTo: string): string {
-  const safeReturnTo = safeRelativeReturnPath(returnTo);
-  return `${SIGN_IN_PATH}?return_to=${encodeURIComponent(safeReturnTo)}`;
+  const safeReturnTo = withHarbourBasePath(safeRelativeReturnPath(returnTo));
+  return `${withHarbourBasePath(SIGN_IN_PATH)}?return_to=${encodeURIComponent(safeReturnTo)}`;
 }
 
 export function chatGPTSignOutPath(returnTo = "/"): string {
-  const safeReturnTo = safeRelativeReturnPath(returnTo);
-  return `${SIGN_OUT_PATH}?return_to=${encodeURIComponent(safeReturnTo)}`;
+  const safeReturnTo = withHarbourBasePath(safeRelativeReturnPath(returnTo));
+  return `${withHarbourBasePath(SIGN_OUT_PATH)}?return_to=${encodeURIComponent(safeReturnTo)}`;
 }
 
 function safeRelativeReturnPath(value: string): string {
@@ -64,7 +75,11 @@ function safeRelativeReturnPath(value: string): string {
     return "/";
   }
   if (url.origin !== "https://app.local") return "/";
-  if (isReservedAuthPath(url.pathname)) return "/";
+  const basePath = harbourBasePath();
+  const applicationPath = basePath && (url.pathname === basePath || url.pathname.startsWith(`${basePath}/`))
+    ? url.pathname.slice(basePath.length) || "/"
+    : url.pathname;
+  if (isReservedAuthPath(applicationPath)) return "/";
 
   return `${url.pathname}${url.search}${url.hash}`;
 }

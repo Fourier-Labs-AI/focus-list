@@ -58,12 +58,13 @@ test("post-build preparation rewrites the base-path marker in both deployable tr
   assert.match(prepareScript, /replaceMarker\(["']\.next\/static["']\)/);
 });
 
-test("database access is request-runtime PostgreSQL and browser writes use the Harbour boundary", async () => {
-  const [database, schema, apiRoute, page, tsconfig] = await Promise.all([
+test("database access and application-owned URLs use the Harbour boundary", async () => {
+  const [database, schema, apiRoute, page, auth, tsconfig] = await Promise.all([
     source("db/index.ts"),
     source("db/schema.ts"),
     source("app/api/todos/route.ts"),
     source("app/page.tsx"),
+    source("app/chatgpt-auth.ts"),
     source("tsconfig.json"),
   ]);
 
@@ -77,6 +78,10 @@ test("database access is request-runtime PostgreSQL and browser writes use the H
   assert.ok(page.includes('window.location.pathname.match(/^\\/p\\/'));
   assert.match(page, /crypto\.subtle\.digest\(["']SHA-256["']/);
   assert.match(page, /headers\.set\(["']x-amz-content-sha256["']/);
+  assert.match(auth, /process\.env\.HARBOUR_BASE_PATH/);
+  assert.match(auth, /withHarbourBasePath\(SIGN_IN_PATH\)/);
+  assert.match(auth, /withHarbourBasePath\(SIGN_OUT_PATH\)/);
+  assert.match(auth, /withHarbourBasePath\(safeRelativeReturnPath\(returnTo\)\)/);
 
   const config = JSON.parse(tsconfig);
   assert.ok(config.exclude.includes("worker"));

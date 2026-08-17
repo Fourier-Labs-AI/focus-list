@@ -1,7 +1,1 @@
-{
-  "version": 1,
-  "engine": "postgresql",
-  "migrations": [
-    {"path":"0001_create_todos.sql","sha256":"e7bbd9151624f0e1a83a1d93ebeb49789ca32901a513af997bcae9342eb1abf4"}
-  ]
-}
+{"version":1,"engine":"postgresql","migrations":[{"path":"0001_create_todos.sql","sha256":"e7bbd9151624f0e1a83a1d93ebeb49789ca32901a513af997bcae9342eb1abf4"}]}
